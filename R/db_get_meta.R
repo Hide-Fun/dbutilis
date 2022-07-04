@@ -38,6 +38,7 @@ db_get_meta <- function(.acc, .dest_dir, .n_max, .sleep, .try_max = NULL) {
         res <- res_list[[i]]
         use_urls <- use_urls[which(res_list[[i]] == "fault")]
         path_list <- path_list[which(res_list[[i]] == "fault")]
+        cat(cli::col_br_blue(cli::style_bold("All data are successfully retreived.\n")))
         break
       }
     }

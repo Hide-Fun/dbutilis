@@ -1,21 +1,21 @@
 #' Parse genbank xml files.
 #'
-#' @param .target_dir target directory that contains xml fiels..
+#' @param .target_dir target directory that contains xml fiels.
+#' @param .gbseq parse option.
+#' @param .workers multisession. see `?future::multisession`.
 #' @export
-db_parse_gbxml <- function(.target_dir) {
-  cli::col_br_blue(cli::style_bold("This function use furrr package internally.\nIf you run this function in parallel, set a `plan` for how the code should run."))
+db_parse_gbxml <- function(.target_dir, .gbseq, .workers) {
+  # set multi session.
+  future::plan(future::multisession, workers = .workers)
   # get xml path.
   xml_path <- fs::dir_ls(here::here(.target_dir), glob = "*.xml")
-  len <- length(xml_path)
-  cli::col_br_blue(cli::style_bold(glue::glue("parse {len} xml files.")))
+  cat(cli::col_br_blue(cli::style_bold(glue::glue("parse {len} xml files.\n",  len = length(xml_path)))))
   # load  & parse xml.
-  parsed <- purrr::map_dfr(
-    cli::cli_progress_along(
+  parsed <- suppressMessages(dplyr::bind_rows(promap(
       xml_path,
-      name = cli::col_br_blue(cli::style_bold("parsing xml: ")),
-      total = 100),
-    parse_gbxml2
-  )
+      parse_gbxml2,
+      .gbseq = .gbseq
+  )))
   return(parsed)
 }
 
@@ -32,10 +32,10 @@ parse_gbxml <- function(.xml, .gbseq = c("all", "non_seq", "manual")) {
   list <- xml2::as_list(.xml)
   # split xml.
   # each GBSeq stored in list.
-  gbseq_list <- furrr::future_map(1:size, ~SplitGBset(.list = list, .num = .x), .options = furrr::furrr_options(seed = 1L), .progress = TRUE)
-  feature_table_list <- furrr::future_map(gbseq_list, purrr::pluck, "GBSeq_feature-table", "GBFeature", "GBFeature_quals", .options = furrr::furrr_options(seed = 1L), .progress = TRUE)
-  other_seqids_list <- furrr::future_map(gbseq_list, purrr::pluck, "GBSeq_other-seqids", .options = furrr::furrr_options(seed = 1L), .progress = TRUE)
-  references_list <- furrr::future_map(gbseq_list, purrr::pluck, "GBSeq_references", "GBReference", .options = furrr::furrr_options(seed = 1L), .progress = TRUE)
+  gbseq_list <- furrr::future_map(1:size, ~SplitGBset(.list = list, .num = .x), .options = furrr::furrr_options(seed = 1L))
+  feature_table_list <- furrr::future_map(gbseq_list, purrr::pluck, "GBSeq_feature-table", "GBFeature", "GBFeature_quals", .options = furrr::furrr_options(seed = 1L))
+  other_seqids_list <- furrr::future_map(gbseq_list, purrr::pluck, "GBSeq_other-seqids", .options = furrr::furrr_options(seed = 1L))
+  references_list <- furrr::future_map(gbseq_list, purrr::pluck, "GBSeq_references", "GBReference", .options = furrr::furrr_options(seed = 1L))
 
   # parse gbseq_list.
   if(.gbseq == "all") {
@@ -74,7 +74,7 @@ parse_gbxml <- function(.xml, .gbseq = c("all", "non_seq", "manual")) {
   }
   # get lev_gbseq.
   repl_gbseq <- PatColnames(.x = lev_gbeq)
-  gbseq <- furrr::future_map_dfr(gbseq_list, MapGetValue, .names = lev_gbeq, .options = furrr::furrr_options(seed = 1L), .progress = TRUE) %>%
+  gbseq <- furrr::future_map_dfr(gbseq_list, MapGetValue, .names = lev_gbeq, .options = furrr::furrr_options(seed = 1L)) %>%
     dplyr::rename_with(stringr::str_replace_all,
                        .cols = dplyr::everything(),
                        pattern = repl_gbseq)
@@ -83,7 +83,7 @@ parse_gbxml <- function(.xml, .gbseq = c("all", "non_seq", "manual")) {
   lev_ref <- list("GBReference_title",
                   "GBReference_journal")
   repl_ref <- PatColnames(.x = lev_ref)
-  references <- furrr::future_map_dfr(references_list, MapGetValue, .names = lev_ref, .options = furrr::furrr_options(seed = 1L), .progress = TRUE) %>%
+  references <- furrr::future_map_dfr(references_list, MapGetValue, .names = lev_ref, .options = furrr::furrr_options(seed = 1L)) %>%
     dplyr::rename_with(stringr::str_replace_all,
                        .cols = dplyr::everything(),
                        pattern = repl_ref)
@@ -153,3 +153,4 @@ PatColnames <- function(.x) {
   rlang::set_names(nm = colname,
                    x = rev(unlist(.x)))
 }
+
