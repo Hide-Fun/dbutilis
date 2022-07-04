@@ -4,10 +4,10 @@
 \alias{db_set_analysis}
 \title{Set Analysis}
 \usage{
-db_set_analysis(...)
+db_set_analysis(.target_dir)
 }
 \arguments{
-\item{...}{`...`}
+\item{.target_dir}{target directory.}
 }
 \description{
 Set Analysis
