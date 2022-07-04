@@ -4,10 +4,14 @@
 \alias{db_parse_gbxml}
 \title{Parse genbank xml files.}
 \usage{
-db_parse_gbxml(.target_dir)
+db_parse_gbxml(.target_dir, .gbseq, .workers)
 }
 \arguments{
-\item{.target_dir}{target directory that contains xml fiels..}
+\item{.target_dir}{target directory that contains xml fiels.}
+
+\item{.gbseq}{parse option.}
+
+\item{.workers}{multisession. see `?future::multisession`.}
 }
 \description{
 Parse genbank xml files.
