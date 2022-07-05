@@ -1,0 +1,113 @@
+dbutilis: create database from GenBank
+================
+
+## Create database from GenBank
+
+This package implement these functions:
+
+`db_set_analysis()`: set directories for analysis.
+
+`db_set_taxdmp()`: download taxdmp files (taxid of NCBI Taxonomy) from
+NCBI.
+
+`db_set_acc2taxid()`: download taxid list of accession ids from NCBI.
+
+`db_convert_taxon2acc()`: convert taxon name to accession ids (taxon
+name -\> taxid -\> accession id). This function internally use
+`db_convert_taxon2taxid()` and `db_convert_taxid2acc()`.
+
+`db_divide_acc()`: classify accession ids (use direct submission only).
+
+`db_get_meta()`: get metadata as XML format by accession ids.
+
+`db_get_fasta()`: get sequences as fasta format by accession ids.
+
+`db_parse_xml()`: parse XML metadata to CSV format.
+
+`db_extract_ITS()`: extract ITS sequences by ITSx.
+
+`db_construct_blastdb()`: construct BLASTDB.
+
+## Example
+
+``` r
+# install & load packages,
+remotes::install_github("Hide-Fun/dbutilis", auth_token = "<parsonal access token>")
+install.packages(c("arrow", "tidyverse"))
+library(dbutilis)
+library(arrow)
+library(readr)
+
+# set taxon name.
+taxon <- "Psathyrella"
+kingdom <- "Fungi"
+
+# set working directory.
+db_set_analysis()
+
+# set taxonomy and accession database.
+db_set_taxdmp(.db_dir = "db", .override = TRUE)
+db_set_acc2taxid(.db_dir = "db", .override = TRUE)
+
+# convret taxon name to accession id.
+acc_raw <- db_convert_taxon2acc(
+  .taxon = taxon,
+  .target_rank = genus,
+  .db_path_tax = "db/rankedlineage_2022-07-04.parquet",
+  .db_path_acc = "db/acc2taxid_gb_2022-07-04.parquet",
+  .check_kingdom = "Fungi",
+  .lower_taxon = TRUE
+)
+
+sink("accession/raw_acc.txt")
+acc_raw
+sink()
+
+# select "Direct submissions".
+acc_cleaned <- db_divide_acc(
+  .acc = acc_raw,
+  .type = "Direct submissions"
+)
+
+sink("accession/acc_cleaned.txt")
+acc_cleaned
+sink()
+
+# get metadata.
+db_get_meta(
+  .acc = acc_cleaned,
+  .dest_dir = "metadata/",
+  .n_max = 150,
+  .sleep = .2,
+  .try_max = 3
+)
+
+# parse XML to CSV.
+parsed <- db_parse_gbxml(
+  .target_dir = "metadata",
+  .gbseq = "all",
+  .workers = 10
+)
+
+parsed <- dplyr::bind_rows(parsed)
+write_parquet(parsed, "formatted/parsed.parquet")
+# convert to fasta.
+fas <- table_to_fasta(.data = parsed, .otu = `GBSeq_primary-accession`, .seq = GBSeq_sequence)
+write_tsv(fas, "formatted/parsed.fasta", col_names = F)
+
+# extract ITS sequences.
+seq_extract <- db_extract_ITS(
+  .raw_fasta = "formatted/parsed.fasta",
+  .marker_region = "full", # full ITS.
+  .save_dir = "ITSx",
+  .type = "full",
+  .nthread = 10
+)
+
+# save.
+write_tsv(table_to_fasta(seq_extract, otu, sequence), "blastdb/blastdb.fasta", col_names = F)
+
+# construct BLASATDB.
+db_construct_blastdb(.seq_path = "blastdb/extracted.fasta",
+                     .save_dir = "blastdb/")
+```
