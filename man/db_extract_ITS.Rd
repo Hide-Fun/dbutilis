@@ -7,8 +7,7 @@
 db_extract_ITS(
   .raw_fasta,
   .marker_region,
-  .save_dir,
-  .db_name,
+  .save_dir = "ITSx",
   .type = c("full", "marker"),
   .nthread = 10
 )
@@ -16,11 +15,9 @@ db_extract_ITS(
 \arguments{
 \item{.raw_fasta}{path of fasta files.}
 
-\item{.marker_region}{marker region (ITS1, ITS2, 5.8S, ITS, SSU, LSU, all).}
+\item{.marker_region}{marker region (ITS1, ITS2, 5.8S, ITS, SSU, LSU).}
 
 \item{.save_dir}{save directory.}
-
-\item{.db_name}{names for output fasta files.}
 
 \item{.type}{return marker region only or full length sequences.}
 

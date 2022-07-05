@@ -11,7 +11,7 @@ db_parse_gbxml(.target_dir, .gbseq, .workers)
 
 \item{.gbseq}{parse option.}
 
-\item{.workers}{multisession. see `?future::multisession`.}
+\item{.workers}{see `?multisession`.}
 }
 \description{
 Parse genbank xml files.

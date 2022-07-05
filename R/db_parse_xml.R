@@ -2,20 +2,21 @@
 #'
 #' @param .target_dir target directory that contains xml fiels.
 #' @param .gbseq parse option.
-#' @param .workers multisession. see `?future::multisession`.
+#' @param .workers see `?multisession`.
 #' @export
 db_parse_gbxml <- function(.target_dir, .gbseq, .workers) {
   # set multi session.
   future::plan(future::multisession, workers = .workers)
   # get xml path.
+  cat(cli::col_br_blue(cli::style_bold("parse XML to csv.\n")))
   xml_path <- fs::dir_ls(here::here(.target_dir), glob = "*.xml")
   cat(cli::col_br_blue(cli::style_bold(glue::glue("parse {len} xml files.\n",  len = length(xml_path)))))
   # load  & parse xml.
-  parsed <- suppressMessages(dplyr::bind_rows(promap(
+  parsed <- suppressWarnings(promap(
       xml_path,
       parse_gbxml2,
       .gbseq = .gbseq
-  )))
+  ))
   return(parsed)
 }
 
@@ -32,10 +33,10 @@ parse_gbxml <- function(.xml, .gbseq = c("all", "non_seq", "manual")) {
   list <- xml2::as_list(.xml)
   # split xml.
   # each GBSeq stored in list.
-  gbseq_list <- furrr::future_map(1:size, ~SplitGBset(.list = list, .num = .x), .options = furrr::furrr_options(seed = 1L))
-  feature_table_list <- furrr::future_map(gbseq_list, purrr::pluck, "GBSeq_feature-table", "GBFeature", "GBFeature_quals", .options = furrr::furrr_options(seed = 1L))
-  other_seqids_list <- furrr::future_map(gbseq_list, purrr::pluck, "GBSeq_other-seqids", .options = furrr::furrr_options(seed = 1L))
-  references_list <- furrr::future_map(gbseq_list, purrr::pluck, "GBSeq_references", "GBReference", .options = furrr::furrr_options(seed = 1L))
+  gbseq_list <- supmap(1:size, ~SplitGBset(.list = list, .num = .x))
+  feature_table_list <- supmap(gbseq_list, purrr::pluck, "GBSeq_feature-table", "GBFeature", "GBFeature_quals")
+  other_seqids_list <- supmap(gbseq_list, purrr::pluck, "GBSeq_other-seqids")
+  references_list <- supmap(gbseq_list, purrr::pluck, "GBSeq_references", "GBReference")
 
   # parse gbseq_list.
   if(.gbseq == "all") {
@@ -74,7 +75,7 @@ parse_gbxml <- function(.xml, .gbseq = c("all", "non_seq", "manual")) {
   }
   # get lev_gbseq.
   repl_gbseq <- PatColnames(.x = lev_gbeq)
-  gbseq <- furrr::future_map_dfr(gbseq_list, MapGetValue, .names = lev_gbeq, .options = furrr::furrr_options(seed = 1L)) %>%
+  gbseq <- supmap_dfr(gbseq_list, MapGetValue, .names = lev_gbeq) %>%
     dplyr::rename_with(stringr::str_replace_all,
                        .cols = dplyr::everything(),
                        pattern = repl_gbseq)
@@ -83,7 +84,7 @@ parse_gbxml <- function(.xml, .gbseq = c("all", "non_seq", "manual")) {
   lev_ref <- list("GBReference_title",
                   "GBReference_journal")
   repl_ref <- PatColnames(.x = lev_ref)
-  references <- furrr::future_map_dfr(references_list, MapGetValue, .names = lev_ref, .options = furrr::furrr_options(seed = 1L)) %>%
+  references <- supmap_dfr(references_list, MapGetValue, .names = lev_ref) %>%
     dplyr::rename_with(stringr::str_replace_all,
                        .cols = dplyr::everything(),
                        pattern = repl_ref)
@@ -93,8 +94,8 @@ parse_gbxml <- function(.xml, .gbseq = c("all", "non_seq", "manual")) {
     tibble::enframe(name = "id") %>%
     tidyr::unnest(value) %>%
     dplyr::mutate(name = names(value)) %>%
-    dplyr::mutate(name2 = furrr::future_map(value, names, .options = furrr::furrr_options(seed = 1L)),
-                  value2 = furrr::future_map(value, unlist, .options = furrr::furrr_options(seed = 1L))) %>%
+    dplyr::mutate(name2 = supmap(value, names),
+                  value2 = supmap(value, unlist)) %>%
     tidyr::unnest(c(name2, value2)) %>%
     tidyr::pivot_wider(names_from = "name2", values_from = "value2") %>%
     dplyr::mutate(GBQualifier_value = dplyr::if_else(
@@ -106,8 +107,8 @@ parse_gbxml <- function(.xml, .gbseq = c("all", "non_seq", "manual")) {
   # parse other_seqids_list.
   other_seqids <- other_seqids_list %>%
     tibble::enframe(name = "id") %>%
-    dplyr::mutate(value2 = furrr::future_map(value, unlist, .options = furrr::furrr_options(seed = 1L)),
-                  value2 = furrr::future_map(value2, paste0, collapse = "_", .options = furrr::furrr_options(seed = 1L))) %>%
+    dplyr::mutate(value2 = supmap(value, unlist),
+                  value2 = supmap(value2, paste0, collapse = "_")) %>%
     tibble::add_column(name2 = "GBSeqid") %>%
     tidyr::unnest(c(name2, value2)) %>%
     dplyr::select(id, name2, value2) %>%
@@ -121,7 +122,11 @@ parse_gbxml <- function(.xml, .gbseq = c("all", "non_seq", "manual")) {
   # bind all data.
   rlt <- dplyr::bind_cols(
     gbseq, other_seqids, references, feature_table
-  )
+  ) %>%
+    dplyr::mutate(
+      dplyr::across(where(is.list), as.character),
+      dplyr::across(where(is.character), stringr::str_replace, "NULL", NA_character_)
+    )
   return(rlt)
 }
 
@@ -143,7 +148,7 @@ GetValue <- function(.list, .name) {
 
 # multiple name.
 MapGetValue <- function( .list, .names, .f = GetValue) {
-  furrr::future_map_dfc(.names, GetValue, .list = .list, .options = furrr::furrr_options(seed = 1L))
+  supmap_dfc(.names, GetValue, .list = .list)
 }
 
 # make colname pattern.

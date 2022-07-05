@@ -13,10 +13,11 @@ db_convert_taxon2acc <- function(.taxon,
                                  .db_path_acc,
                                  .check_kingdom = "Fungi",
                                  .lower_taxon = TRUE) {
-  cli::col_br_blue(cli::style_bold("Exclude WGS sequences."))
+  # cat(cli::col_br_blue(cli::style_bold("convert taxid to accession id.\n")))
+  # cat(cli::col_br_blue(cli::style_bold("Exclude WGS sequences.")))
   # convert taxon name to taxid.
   taxids <- db_convert_taxon2taxid(
-    .taxon = taxon,
+    .taxon = .taxon,
     .target_rank = {{ .target_rank }},
     .db_path = .db_path_tax,
     .check_kingdom = .check_kingdom,

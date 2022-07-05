@@ -13,7 +13,7 @@ db_divide_acc <- function(.acc, .type = "Direct submissions") {
   pat <- paste0(pat, collapse = "|")
   cat(cli::col_br_blue(cli::style_bold(glue::glue("raw data: {len} .\n",  len = length(.acc)))))
   # filter by condition.
-  acc_used <- acc %>%
+  acc_used <- .acc %>%
     tibble::enframe() %>%
     dplyr::filter(stringr::str_detect(value, pat)) %>%
     dplyr::pull(value)

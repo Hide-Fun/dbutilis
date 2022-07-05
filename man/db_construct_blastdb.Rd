@@ -2,30 +2,15 @@
 % Please edit documentation in R/db_construct_blastdb.R
 \name{db_construct_blastdb}
 \alias{db_construct_blastdb}
-\title{Extract ITS region by using ITSx}
+\title{Construct BLASTDB.}
 \usage{
-db_construct_blastdb(
-  .raw_fasta,
-  .marker_region,
-  .save_dir,
-  .db_name,
-  .type = c("full", "marker"),
-  .nthread = 10
-)
+db_construct_blastdb(.seq_path, .save_dir = "blastdb")
 }
 \arguments{
-\item{.raw_fasta}{path of fasta files.}
-
-\item{.marker_region}{marker region (ITS1, ITS2, 5.8S, ITS, SSU, LSU, all).}
+\item{.seq_path}{path of fasta files.}
 
 \item{.save_dir}{save directory.}
-
-\item{.db_name}{names for database.}
-
-\item{.type}{return marker region only or full length sequences.}
-
-\item{.nthread}{number of thread}
 }
 \description{
-Extract ITS region by using ITSx
+Construct BLASTDB.
 }

@@ -1,22 +1,19 @@
-#' Extract ITS region by using ITSx
+#' Construct BLASTDB.
 #'
-#' @param .raw_fasta path of fasta files.
-#' @param .marker_region marker region (ITS1, ITS2, 5.8S, ITS, SSU, LSU, all).
+#' @param .seq_path path of fasta files.
 #' @param .save_dir save directory.
-#' @param .db_name names for database.
-#' @param .type return marker region only or full length sequences.
-#' @param .nthread number of thread
 #' @export
-db_construct_blastdb <- function(.raw_fasta,
-                                 .marker_region,
-                                 .save_dir,
-                                 .db_name,
-                                 .type = c("full", "marker"),
-                                 .nthread = 10) {
+db_construct_blastdb <- function(.seq_path,
+                                 .save_dir = "blastdb") {
   # make blast command.
-  cmd <- "cd blastdb;makeblastdb -dbtype nucl -parse_seqids -in {.db_name} -logfile make_blastdb.log -max_file_sz '4GB'"
+  cat(cli::col_br_blue(cli::style_bold("\nconstruct blast database.\n")))
+  seq_path <- here::here(.seq_path)
+  save_dir <- here::here(.save_dir)
+  cmd <- "cd {save_dir};makeblastdb -dbtype nucl -parse_seqids -in {seq_path} -logfile make_blastdb.log -max_file_sz '4GB'"
   cmd <- glue::glue(cmd)
+  cat("\n")
   cat(cmd)
+  cat("\n")
   system(command = cmd, intern = TRUE)
-  fs::dir_ls("blastdb")
+  fs::dir_ls(save_dir)
 }

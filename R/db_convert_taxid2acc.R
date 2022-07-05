@@ -4,6 +4,7 @@
 #' @param .db_path database path.
 #' @export
 db_convert_taxid2acc <- function(.taxid, .db_path) {
+  cat(cli::col_br_blue(cli::style_bold("convert taxid to accession id.\n")))
   # load data.
   taxid2acc <- arrow::read_parquet(here::here(.db_path))
   # get accession ids.
