@@ -1,9 +1,9 @@
-#' Classify accession ids.
+#' Select accession ids.
 #'
 #' @param ... path through `curl::curl_download()`
 #' @param .sleep sleep time.
 #' @export
-db_divide_acc <- function(.acc, .type = "Direct submissions") {
+db_select_acc <- function(.acc, .type = "Direct submissions") {
   # get acc_table.
   ref <- acc_table
   # get pattern.
