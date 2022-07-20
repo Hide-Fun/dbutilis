@@ -1,10 +1,10 @@
-#' Donwload accession2taxid
+#' Donwload accession2taxid_
 #'
 #' @param .db_dir directory.
 #' @param .override override old one.
 #' @param .save_to_parquet convert to parquet format.
 #' @export
-db_set_acc2taxid <- function(.db_dir,
+db_set_acc2taxid_ <- function(.db_dir,
                              .override = TRUE,
                              .save_to_parquet = TRUE) {
   target_dir <- here::here(glue::glue("{.db_dir}"))
