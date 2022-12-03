@@ -12,16 +12,17 @@ db_convert_taxon2taxid <- function(.taxon,
                                    .check_kingdom = "Fungi",
                                    .lower_taxon = TRUE) {
   cat(cli::col_br_blue(cli::style_bold("convert taxon name to taxid.\n")))
+  .target_rank <- rlang::sym(.target_rank)
   # load data.
   rankedlineage <- arrow::read_parquet(here::here(.db_path))
   # get taxid(s).
-  if(.lower_taxon == TRUE) {
+  if (.lower_taxon == TRUE) {
     taxid_query <- rankedlineage %>%
-      dplyr::filter({{ .target_rank }} == .taxon & kingdom == .check_kingdom) %>%
+      dplyr::filter({{ .target_rank }} == {{ .taxon }} & kingdom == {{ .check_kingdom }}) %>%
       dplyr::pull(tax_id)
   } else {
     taxid_query <- rankedlineage %>%
-      dplyr::filter(tax_name == .taxon & kingdom == .check_kingdom) %>%
+      dplyr::filter(tax_name == {{ .taxon }} & kingdom == {{ .check_kingdom }}) %>%
       dplyr::pull(tax_id)
   }
   return(taxid_query)
