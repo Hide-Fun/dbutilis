@@ -10,12 +10,13 @@ db_parse_gbxml <- function(.target_dir, .gbseq, .workers) {
   # get xml path.
   cat(cli::col_br_blue(cli::style_bold("parse XML to csv.\n")))
   xml_path <- fs::dir_ls(here::here(.target_dir), glob = "*.xml")
-  cat(cli::col_br_blue(cli::style_bold(glue::glue("parse {len} xml files.\n",  len = length(xml_path)))))
+  cat(cli::col_br_blue(cli::style_bold(glue::glue("parse {len} xml files.\n", len = length(xml_path)))))
   # load  & parse xml.
-  parsed <- suppressWarnings(promap(
-      xml_path,
-      parse_gbxml2,
-      .gbseq = .gbseq
+  parsed <- suppressWarnings(furrr::future_map(
+    xml_path,
+    parse_gbxml2,
+    .gbseq = .gbseq,
+    .progress = TRUE
   ))
   return(parsed)
 }
