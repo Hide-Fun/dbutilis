@@ -21,6 +21,7 @@ Imports:
     httr,
     magrittr,
     progressr,
+    purrr,
     R.utils,
     readr,
     rlang,

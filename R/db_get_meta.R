@@ -21,7 +21,7 @@ db_get_meta <- function(.acc, .dest_dir, .n_max, .sleep, .try_max = NULL) {
   use_urls <- unlist(purrr::map(base_url, ~glue::glue(.x, .ids = .ids)))
   path_list <- unlist(purrr::map(1:length(use_urls), ~paste0(.dest_dir, "/", .x, ".xml")))
   # download.
-  res <- promap2_chr(use_urls, path_list, ~curl_download2(.x, .y, .sleep = .sleep))
+  res <- purrr::map2_chr(use_urls, path_list, ~curl_download2(.x, .y, .sleep = .sleep))
   # trials.
   if(!is.null(.try_max)) {
     # make empty list.
