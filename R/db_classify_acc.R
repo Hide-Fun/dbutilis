@@ -3,12 +3,12 @@
 #' @param .acc accession ids.
 #' @export
 db_classify_acc <- function(.acc) {
-  type <- unique(acc_table$Type)
-  classify <- purrr::map(type, db_divide_acc, .acc = acc_raw)
-  classify_len <- purrr::map_dbl(classify, length)
-  unclassify <- .acc[!.acc %in% unlist(classify)]
-  unclassify_len <- length(unclassify)
-  type <- c(type, "others")
-  len <- c(classify_len, unclassify_len)
-  return(tibble::tibble(len = len, type = type))
+  # remove RefSeq
+  filtered_ids <- .acc[!grepl("^[A-Z]+_\\d+$", .acc)]
+  cat(cli::col_br_blue(cli::style_bold("Removing RefSeq IDs.")))
+  cat(cli::col_br_blue(cli::style_bold(glue::glue("filtered data: {len} .\n",  len = length(filtered_ids)))))
+  dbutilis::acc_table |>
+    mutate(
+      query = purrr::map_int(accession_pat, ~sum(stringr::str_detect(filtered_ids, .x)))
+    )
 }
