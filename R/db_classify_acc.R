@@ -10,6 +10,7 @@ db_classify_acc <- function(.acc) {
   dbutilis::acc_table |>
     dplyr::filter(!is.na(accession_format)) |>
     dplyr::mutate(
-      query = purrr::map_int(accession_pat, ~sum(stringr::str_detect(filtered_ids, .x)))
+      query = purrr::map_int(accession_pat, ~sum(stringr::str_detect(filtered_ids, .x))),
+      query_acc = purrr::map(accession_pat, ~filtered_ids[which(stringr::str_detect(filtered_ids, .x))])
     )
 }

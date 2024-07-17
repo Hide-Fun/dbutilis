@@ -5,7 +5,7 @@
 #' @param .nthread number of threads
 #'
 #' @export
-db_remove_outlier <- function (
+db_remove_outlier <- function(
     .save_dir = "phylogeny",
     .dont_use_python = T,
     .nthread = 10)
@@ -46,6 +46,5 @@ db_remove_outlier <- function (
     fs::dir_ls(save_dir)
     return(cleaned)
   } else {
-    return(cleaned)
   }
 }

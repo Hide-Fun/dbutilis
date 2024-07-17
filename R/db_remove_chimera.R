@@ -31,4 +31,5 @@ db_remove_chimera <- function(.save_dir = "phylogeny",
   cat("\n")
   system(command = cmd, intern = TRUE)
   cmd <- glue::glue("seqkit seq -w 0 {.save_dir}/nonchimeras.fas > temp.fas && mv temp.fas {.save_dir}/nonchimeras.fas")
+  system(command = cmd, intern = TRUE)
 }
