@@ -90,8 +90,8 @@ parse_gbxml <- function(.xml) {
     tidyr::unnest(value) %>%
     dplyr::mutate(name = names(value)) %>%
     dplyr::mutate(
-      name2 = supmap(value, names),
-      value2 = supmap(value, unlist)
+      name2 = purrr::map(value, names),
+      value2 = purrr::map(value, unlist)
     ) %>%
     tidyr::unnest(c(name2, value2)) %>%
     tidyr::pivot_wider(
@@ -155,7 +155,8 @@ GetValue <- function(.list, .name) {
 
 # multiple name.
 MapGetValue <- function(.list, .names, .f = GetValue) {
-  supmap_dfc(.names, GetValue, .list = .list)
+  purrr::map(.names, GetValue, .list = .list) %>%
+    purrr::list_cbind()
 }
 
 # make colname pattern.
