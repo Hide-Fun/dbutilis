@@ -156,7 +156,7 @@ GetValue <- function(.list, .name) {
 # multiple name.
 MapGetValue <- function(.list, .names, .f = GetValue) {
   purrr::map(.names, GetValue, .list = .list) %>%
-    purrr::list_cbind()
+    dplyr::bind_cols()
 }
 
 # make colname pattern.
