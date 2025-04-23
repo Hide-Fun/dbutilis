@@ -9,7 +9,7 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1.9000
+RoxygenNote: 7.3.2
 Imports: 
     arrow,
     cli,
@@ -21,7 +21,7 @@ Imports:
     httr,
     magrittr,
     progressr,
-    purrr,
+    purrr (>= 1.0.4.9000),
     R.utils,
     readr,
     rlang,
@@ -31,3 +31,5 @@ Imports:
     xml2
 Depends: 
     R (>= 2.10)
+Remotes:  
+    tidyverse/purrr
