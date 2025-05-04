@@ -20,8 +20,6 @@ This package implement these functions:
 
 `db_get_meta()`: get metadata as XML format by accession ids.
 
-`db_get_fasta()`: get sequences as fasta format by accession ids.
-
 `db_parse_xml()`: parse XML metadata to CSV format.
 
 `db_extract_ITS()`: extract ITS sequences by ITSx.
@@ -59,19 +57,13 @@ acc_raw <- db_convert_taxon2acc(
   .lower_taxon = TRUE
 )
 
-sink("accession/raw_acc.txt")
-acc_raw
-sink()
-
-# select "Direct submissions".
-acc_cleaned <- db_divide_acc(
-  .acc = acc_raw,
-  .type = "Direct submissions"
-)
-
-sink("accession/acc_cleaned.txt")
-acc_cleaned
-sink()
+# select accession ids.
+acc_classification <- db_classify_acc(.acc = acc_raw)
+acc_used <- acc_classification |>
+  filter(
+    query != 0,
+    !str_detect(sequence_type, "STS|cDNA|Genome|WGS|SRA|protein|scaffold|EST|TPA|TSA|TLS|HTC|HTG|GSS|MGA")
+  )
 
 # get metadata.
 db_get_meta(
@@ -85,7 +77,6 @@ db_get_meta(
 # parse XML to CSV.
 parsed <- db_parse_gbxml(
   .target_dir = "metadata",
-  .gbseq = "all",
   .workers = 10
 )
 
